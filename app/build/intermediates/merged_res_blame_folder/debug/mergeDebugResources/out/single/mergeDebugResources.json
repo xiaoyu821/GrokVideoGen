@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.grokvideo.gen.app-debug-30:/layout_activity_history.xml.flat",
+        "source": "com.grokvideo.gen.app-main-32:/layout/activity_history.xml"
+    },
+    {
+        "merged": "com.grokvideo.gen.app-debug-30:/layout_activity_main.xml.flat",
+        "source": "com.grokvideo.gen.app-main-32:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.grokvideo.gen.app-debug-30:/menu_main_menu.xml.flat",
+        "source": "com.grokvideo.gen.app-main-32:/menu/main_menu.xml"
+    },
+    {
+        "merged": "com.grokvideo.gen.app-debug-30:/layout_activity_settings.xml.flat",
+        "source": "com.grokvideo.gen.app-main-32:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "com.grokvideo.gen.app-debug-30:/layout_item_history.xml.flat",
+        "source": "com.grokvideo.gen.app-main-32:/layout/item_history.xml"
+    }
+]

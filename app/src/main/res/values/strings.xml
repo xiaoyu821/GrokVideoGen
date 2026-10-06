@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Grok视频生成</string>
+    <string name="settings">设置</string>
+    <string name="history">历史记录</string>
+    <string name="generate_video">生成视频</string>
+    <string name="prompt_hint">描述你想生成的视频内容...</string>
+    <string name="generating">生成中...</string>
+    <string name="play">播放</string>
+    <string name="download">下载</string>
+    <string name="delete">删除</string>
+    <string name="confirm_delete">确定要删除这条记录吗？</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="base_url">Base URL</string>
+    <string name="api_key">API Key</string>
+    <string name="model_name">模型名称</string>
+    <string name="no_history">暂无历史记录</string>
+    <string name="generation_complete">生成完成</string>
+    <string name="generation_failed">生成失败</string>
+    <string name="error_empty_prompt">请输入提示词</string>
+    <string name="error_no_api_key">请先在设置中配置 API Key</string>
+</resources>
