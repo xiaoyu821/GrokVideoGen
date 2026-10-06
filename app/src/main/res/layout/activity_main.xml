@@ -1,125 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:fitsSystemWindows="true">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- 顶部标题栏 - 毛玻璃效果 -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/surface" />
+        android:layout_height="64dp"
+        android:background="@color/surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✨ Grok 视频"
+            android:textColor="@color/textPrimary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnHistory"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/glass_input"
+            android:src="@android:drawable/ic_menu_recent_history"
+            android:padding="10dp"
+            android:layout_marginEnd="8dp" />
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/glass_input"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:padding="10dp" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <EditText
-                android:id="@+id/promptInput"
+            <!-- 输入区域 - 玻璃卡片 -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:hint="@string/prompt_hint"
-                android:gravity="top"
-                android:background="@color/surface"
-                android:textColor="@color/textPrimary"
-                android:padding="12dp" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/glass_bg"
+                android:orientation="vertical"
+                android:padding="20dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎬 描述你的视频"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <EditText
+                    android:id="@+id/promptInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="130dp"
+                    android:hint="描述你想生成的视频内容..."
+                    android:textColorHint="@color/textSecondary"
+                    android:gravity="top"
+                    android:background="@drawable/glass_input"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="15sp"
+                    android:padding="16dp"
+                    android:lineSpacingExtra="4dp" />
+            </LinearLayout>
+
+            <!-- 生成按钮 - 渐变 -->
             <Button
                 android:id="@+id/generateButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/generate_video" />
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/btn_gradient"
+                android:text="⚡ 开始生成"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:stateListAnimator="@null" />
 
+            <!-- 进度区域 - 玻璃卡片 -->
             <LinearLayout
                 android:id="@+id/progressLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="@color/surface"
+                android:background="@drawable/glass_bg"
+                android:padding="20dp"
                 android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏳ 生成中"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
 
                 <ProgressBar
                     android:id="@+id/progressBar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="8dp"
+                    android:progressDrawable="@drawable/btn_gradient"
+                    android:max="100" />
 
                 <TextView
                     android:id="@+id/progressText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="8dp"
                     android:text="0%"
-                    android:textColor="@color/textSecondary" />
+                    android:textColor="@color/colorAccent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <androidx.cardview.widget.CardView
+            <!-- 错误提示 - 红色玻璃 -->
+            <LinearLayout
                 android:id="@+id/errorCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/glass_error"
+                android:padding="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:visibility="gone">
 
                 <TextView
-                    android:id="@+id/errorText"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:textColor="@color/error" />
-            </androidx.cardview.widget.CardView>
+                    android:text="❌ "
+                    android:textSize="18sp" />
 
-            <androidx.cardview.widget.CardView
+                <TextView
+                    android:id="@+id/errorText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/error"
+                    android:textSize="14sp"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <!-- 结果区域 - 绿色玻璃 -->
+            <LinearLayout
                 android:id="@+id/resultCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/glass_success"
+                android:orientation="vertical"
+                android:padding="20dp"
                 android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎉 生成完成"
+                    android:textColor="@color/success"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <ImageView
+                    android:id="@+id/videoThumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="@drawable/glass_input"
+                    android:scaleType="centerCrop" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:id="@+id/videoThumbnail"
-                        android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        android:background="@color/surface" />
+                    <Button
+                        android:id="@+id/playButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/btn_gradient"
+                        android:text="▶  播放"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:stateListAnimator="@null" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/playButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            android:text="@string/play" />
-
-                        <Button
-                            android:id="@+id/downloadButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/download" />
-                    </LinearLayout>
+                    <Button
+                        android:id="@+id/downloadButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_outline"
+                        android:text="💾 下载"
+                        android:textColor="@color/textPrimary"
+                        android:textSize="14sp"
+                        android:stateListAnimator="@null" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

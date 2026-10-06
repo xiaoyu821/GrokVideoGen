@@ -5,7 +5,19 @@
     <color name="colorAccent">#6EE7B7</color>
     <color name="background">#0A0D12</color>
     <color name="surface">#0F131C</color>
+    <color name="surfaceCard">#161D2B</color>
     <color name="textPrimary">#E8EDF2</color>
     <color name="textSecondary">#9CA3AF</color>
     <color name="error">#EF4444</color>
+    <color name="errorBg">#1A0A0D12</color>
+    <color name="success">#22C55E</color>
+    <color name="glass_bg">#20FFFFFF</color>
+    <color name="glass_stroke">#30FFFFFF</color>
+    <color name="gradient_start">#1538BDF8</color>
+    <color name="gradient_end">#156EE7B7</color>
+    <color name="btn_gradient_start">#38BDF8</color>
+    <color name="btn_gradient_end">#6EE7B7</color>
+    <color name="white20">#33FFFFFF</color>
+    <color name="white10">#1AFFFFFF</color>
+    <color name="white05">#0DFFFFFF</color>
 </resources>

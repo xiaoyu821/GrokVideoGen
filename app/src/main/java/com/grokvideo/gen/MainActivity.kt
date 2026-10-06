@@ -3,13 +3,10 @@ package com.grokvideo.gen
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import androidx.cardview.widget.CardView
+import com.google.android.material.color.DynamicColors
 import com.grokvideo.gen.data.*
 import kotlinx.coroutines.*
 import java.util.*
@@ -21,9 +18,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressLayout: LinearLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
-    private lateinit var errorCard: CardView
+    private lateinit var errorCard: LinearLayout
     private lateinit var errorText: TextView
-    private lateinit var resultCard: CardView
+    private lateinit var resultCard: LinearLayout
     private lateinit var videoThumbnail: ImageView
     private lateinit var playButton: Button
     private lateinit var downloadButton: Button
@@ -36,11 +33,10 @@ class MainActivity : AppCompatActivity() {
     private var currentVideoUrl: String? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 莫奈动态取色
+        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
         
         apiService = ApiService()
         prefsManager = PreferencesManager(this)
@@ -62,13 +58,21 @@ class MainActivity : AppCompatActivity() {
         videoThumbnail = findViewById(R.id.videoThumbnail)
         playButton = findViewById(R.id.playButton)
         downloadButton = findViewById(R.id.downloadButton)
+        
+        // 顶部按钮
+        findViewById<ImageButton>(R.id.btnHistory).setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
+        findViewById<ImageButton>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
     }
     
     private fun setupListeners() {
         generateButton.setOnClickListener {
             val prompt = promptInput.text.toString().trim()
             if (prompt.isBlank()) {
-                showError(getString(R.string.error_empty_prompt))
+                showError("请输入视频描述")
                 return@setOnClickListener
             }
             generateVideo(prompt)
@@ -76,8 +80,7 @@ class MainActivity : AppCompatActivity() {
         
         playButton.setOnClickListener {
             currentVideoUrl?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                startActivity(intent)
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             }
         }
         
@@ -90,29 +93,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-    
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
-            R.id.action_history -> {
-                startActivity(Intent(this, HistoryActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-    
     private fun generateVideo(prompt: String) {
         val apiKey = prefsManager.apiKey
         if (apiKey.isBlank()) {
-            showError(getString(R.string.error_no_api_key))
+            showError("请先在设置中配置 API Key")
             return
         }
         
@@ -120,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         hideResult()
         showProgress()
         generateButton.isEnabled = false
+        generateButton.alpha = 0.5f
         
         scope.launch {
             try {
@@ -141,15 +126,13 @@ class MainActivity : AppCompatActivity() {
                     status = TaskStatus.PENDING
                 )
                 
-                withContext(Dispatchers.IO) {
-                    historyManager.addTask(task)
-                }
-                
+                withContext(Dispatchers.IO) { historyManager.addTask(task) }
                 pollTaskStatus(baseUrl, apiKey, taskId, task)
                 
             } catch (e: Exception) {
                 hideProgress()
                 generateButton.isEnabled = true
+                generateButton.alpha = 1f
                 showError(e.message ?: "未知错误")
             }
         }
@@ -157,98 +140,56 @@ class MainActivity : AppCompatActivity() {
     
     private suspend fun pollTaskStatus(baseUrl: String, apiKey: String, taskId: String, task: VideoTask) {
         var attempts = 0
-        val maxAttempts = 60
-        
-        while (attempts < maxAttempts) {
+        while (attempts < 60) {
             delay(5000)
             attempts++
-            
             try {
-                val statusResponse = withContext(Dispatchers.IO) {
+                val sr = withContext(Dispatchers.IO) {
                     apiService.checkTaskStatus(baseUrl, apiKey, taskId)
                 }
-                
-                val progress = statusResponse.progress
-                updateProgress(progress)
-                
-                val updatedTask = task.copy(
-                    status = when (statusResponse.status) {
-                        "done" -> TaskStatus.DONE
-                        "failed" -> TaskStatus.FAILED
-                        else -> TaskStatus.PROCESSING
-                    },
-                    progress = progress,
-                    videoUrl = statusResponse.video?.url,
-                    duration = statusResponse.video?.duration,
-                    completedAt = if (statusResponse.status == "done") System.currentTimeMillis() else null
-                )
+                updateProgress(sr.progress)
                 
                 withContext(Dispatchers.IO) {
-                    historyManager.updateTask(updatedTask)
+                    historyManager.updateTask(task.copy(
+                        status = when (sr.status) { "done" -> TaskStatus.DONE; "failed" -> TaskStatus.FAILED; else -> TaskStatus.PROCESSING },
+                        progress = sr.progress,
+                        videoUrl = sr.video?.url,
+                        duration = sr.video?.duration,
+                        completedAt = if (sr.status == "done") System.currentTimeMillis() else null
+                    ))
                 }
                 
-                when (statusResponse.status) {
+                when (sr.status) {
                     "done" -> {
                         hideProgress()
                         generateButton.isEnabled = true
-                        showResult(statusResponse.video?.url)
+                        generateButton.alpha = 1f
+                        showResult(sr.video?.url)
                         return
                     }
-                    "failed" -> {
-                        throw Exception("视频生成失败")
-                    }
+                    "failed" -> throw Exception("视频生成失败")
                 }
-                
             } catch (e: Exception) {
                 hideProgress()
                 generateButton.isEnabled = true
+                generateButton.alpha = 1f
                 showError(e.message ?: "未知错误")
                 return
             }
         }
-        
         hideProgress()
         generateButton.isEnabled = true
-        showError("生成超时，请稍后在历史记录中查看")
+        generateButton.alpha = 1f
+        showError("生成超时")
     }
     
-    private fun showProgress() {
-        progressLayout.visibility = View.VISIBLE
-        progressBar.progress = 0
-        progressText.text = "0%"
-    }
+    private fun showProgress() { progressLayout.visibility = View.VISIBLE; progressBar.progress = 0; progressText.text = "0%" }
+    private fun hideProgress() { progressLayout.visibility = View.GONE }
+    private fun updateProgress(p: Int) { progressBar.progress = p; progressText.text = "$p%" }
+    private fun showError(msg: String) { errorCard.visibility = View.VISIBLE; errorText.text = msg }
+    private fun hideError() { errorCard.visibility = View.GONE }
+    private fun showResult(url: String?) { if (url == null) return; currentVideoUrl = url; resultCard.visibility = View.VISIBLE }
+    private fun hideResult() { resultCard.visibility = View.GONE; currentVideoUrl = null }
     
-    private fun hideProgress() {
-        progressLayout.visibility = View.GONE
-    }
-    
-    private fun updateProgress(progress: Int) {
-        progressBar.progress = progress
-        progressText.text = "$progress%"
-    }
-    
-    private fun showError(message: String) {
-        errorCard.visibility = View.VISIBLE
-        errorText.text = message
-    }
-    
-    private fun hideError() {
-        errorCard.visibility = View.GONE
-    }
-    
-    private fun showResult(videoUrl: String?) {
-        if (videoUrl == null) return
-        currentVideoUrl = videoUrl
-        resultCard.visibility = View.VISIBLE
-    }
-    
-    private fun hideResult() {
-        resultCard.visibility = View.GONE
-        currentVideoUrl = null
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
-        scope.cancel()
-    }
+    override fun onDestroy() { super.onDestroy(); scope.cancel() }
 }
