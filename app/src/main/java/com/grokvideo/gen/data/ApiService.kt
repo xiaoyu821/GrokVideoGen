@@ -24,7 +24,8 @@ class ApiService {
         model: String,
         prompt: String
     ): CreateTaskResponse = withContext(Dispatchers.IO) {
-        val url = "$baseUrl/v1/videos/generations"
+        val cleanBaseUrl = baseUrl.trimEnd('/')
+        val url = "$cleanBaseUrl/v1/videos/generations"
         
         val json = JsonObject().apply {
             addProperty("model", model)
@@ -47,7 +48,11 @@ class ApiService {
             throw Exception("HTTP ${response.code}: $responseBody")
         }
         
-        gson.fromJson(responseBody, CreateTaskResponse::class.java)
+        try {
+            gson.fromJson(responseBody, CreateTaskResponse::class.java)
+        } catch (e: Exception) {
+            throw Exception("解析响应失败: $responseBody")
+        }
     }
     
     suspend fun checkTaskStatus(
@@ -70,7 +75,11 @@ class ApiService {
             throw Exception("HTTP ${response.code}: $responseBody")
         }
         
-        gson.fromJson(responseBody, TaskStatusResponse::class.java)
+        try {
+            gson.fromJson(responseBody, TaskStatusResponse::class.java)
+        } catch (e: Exception) {
+            throw Exception("解析响应失败: $responseBody")
+        }
     }
 }
 
