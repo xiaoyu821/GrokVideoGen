@@ -1,6 +1,5 @@
 package com.grokvideo.gen
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,11 +9,9 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.grokvideo.gen.data.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,26 +21,22 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyView: LinearLayout
     private lateinit var historyManager: HistoryManager
-    private lateinit var adapter: HistoryAdapter
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_history)
         
-        setSupportActionBar(findViewById(R.id.toolbar))
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         
         historyManager = HistoryManager(this)
         
-        initViews()
-        loadHistory()
-    }
-    
-    private fun initViews() {
         recyclerView = findViewById(R.id.historyRecyclerView)
         emptyView = findViewById(R.id.emptyView)
-        
         recyclerView.layoutManager = LinearLayoutManager(this)
+        
+        loadHistory()
     }
     
     private fun loadHistory() {
@@ -55,24 +48,18 @@ class HistoryActivity : AppCompatActivity() {
         } else {
             recyclerView.visibility = View.VISIBLE
             emptyView.visibility = View.GONE
-            
-            adapter = HistoryAdapter(tasks) { task ->
-                showDeleteDialog(task)
+            recyclerView.adapter = HistoryAdapter(tasks) { task ->
+                AlertDialog.Builder(this)
+                    .setTitle("删除")
+                    .setMessage("确定要删除这条记录吗？")
+                    .setPositiveButton("删除") { _, _ ->
+                        historyManager.deleteTask(task.id)
+                        loadHistory()
+                    }
+                    .setNegativeButton("取消", null)
+                    .show()
             }
-            recyclerView.adapter = adapter
         }
-    }
-    
-    private fun showDeleteDialog(task: VideoTask) {
-        AlertDialog.Builder(this)
-            .setTitle(R.string.delete)
-            .setMessage(R.string.confirm_delete)
-            .setPositiveButton(R.string.delete) { _, _ ->
-                historyManager.deleteTask(task.id)
-                loadHistory()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
     }
     
     override fun onSupportNavigateUp(): Boolean {
@@ -82,91 +69,73 @@ class HistoryActivity : AppCompatActivity() {
     
     inner class HistoryAdapter(
         private val tasks: List<VideoTask>,
-        private val onDeleteClick: (VideoTask) -> Unit
-    ) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
+        private val onDelete: (VideoTask) -> Unit
+    ) : RecyclerView.Adapter<HistoryAdapter.VH>() {
         
-        private val dateFormat = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
+        private val df = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
         
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_history, parent, false)
-            return ViewHolder(view)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_history, parent, false)
+            return VH(v)
         }
         
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val task = tasks[position]
-            holder.bind(task)
-        }
-        
+        override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(tasks[position])
         override fun getItemCount() = tasks.size
         
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            private val promptText: TextView = itemView.findViewById(R.id.promptText)
-            private val dateText: TextView = itemView.findViewById(R.id.dateText)
-            private val deleteButton: ImageButton = itemView.findViewById(R.id.deleteButton)
-            private val itemProgressBar: ProgressBar = itemView.findViewById(R.id.itemProgressBar)
-            private val statusText: TextView = itemView.findViewById(R.id.statusText)
-            private val itemThumbnail: ImageView = itemView.findViewById(R.id.itemThumbnail)
-            private val actionButtons: LinearLayout = itemView.findViewById(R.id.actionButtons)
-            private val itemPlayButton: MaterialButton = itemView.findViewById(R.id.itemPlayButton)
-            private val durationText: TextView = itemView.findViewById(R.id.durationText)
+        inner class VH(v: View) : RecyclerView.ViewHolder(v) {
+            private val promptText: TextView = v.findViewById(R.id.promptText)
+            private val dateText: TextView = v.findViewById(R.id.dateText)
+            private val deleteBtn: ImageButton = v.findViewById(R.id.deleteButton)
+            private val prog: ProgressBar = v.findViewById(R.id.itemProgressBar)
+            private val statusText: TextView = v.findViewById(R.id.statusText)
+            private val thumb: ImageView = v.findViewById(R.id.itemThumbnail)
+            private val actions: LinearLayout = v.findViewById(R.id.actionButtons)
+            private val playBtn: Button = v.findViewById(R.id.itemPlayButton)
+            private val durText: TextView = v.findViewById(R.id.durationText)
             
-            fun bind(task: VideoTask) {
-                promptText.text = task.prompt
-                dateText.text = dateFormat.format(Date(task.createdAt))
+            fun bind(t: VideoTask) {
+                promptText.text = t.prompt
+                dateText.text = df.format(Date(t.createdAt))
+                deleteBtn.setOnClickListener { onDelete(t) }
                 
-                deleteButton.setOnClickListener {
-                    onDeleteClick(task)
-                }
-                
-                when (task.status) {
+                when (t.status) {
                     TaskStatus.DONE -> {
-                        itemProgressBar.visibility = View.GONE
+                        prog.visibility = View.GONE
                         statusText.visibility = View.GONE
-                        
-                        if (task.videoUrl != null) {
-                            itemThumbnail.visibility = View.VISIBLE
-                            actionButtons.visibility = View.VISIBLE
-                            
-                            Glide.with(itemView.context)
-                                .load(task.videoUrl)
-                                .into(itemThumbnail)
-                            
-                            itemPlayButton.setOnClickListener {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(task.videoUrl))
-                                itemView.context.startActivity(intent)
+                        if (t.videoUrl != null) {
+                            thumb.visibility = View.VISIBLE
+                            actions.visibility = View.VISIBLE
+                            playBtn.setOnClickListener {
+                                itemView.context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(t.videoUrl)))
                             }
-                            
-                            if (task.duration != null) {
-                                durationText.visibility = View.VISIBLE
-                                durationText.text = "${task.duration}秒"
-                            } else {
-                                durationText.visibility = View.GONE
-                            }
+                            if (t.duration != null) {
+                                durText.visibility = View.VISIBLE
+                                durText.text = "${t.duration}秒"
+                            } else durText.visibility = View.GONE
                         }
                     }
                     TaskStatus.PROCESSING -> {
-                        itemProgressBar.visibility = View.VISIBLE
-                        itemProgressBar.progress = task.progress
+                        prog.visibility = View.VISIBLE
+                        prog.progress = t.progress
                         statusText.visibility = View.VISIBLE
-                        statusText.text = "生成中 ${task.progress}%"
-                        itemThumbnail.visibility = View.GONE
-                        actionButtons.visibility = View.GONE
+                        statusText.text = "生成中 ${t.progress}%"
+                        thumb.visibility = View.GONE
+                        actions.visibility = View.GONE
                     }
                     TaskStatus.FAILED -> {
-                        itemProgressBar.visibility = View.GONE
+                        prog.visibility = View.GONE
                         statusText.visibility = View.VISIBLE
                         statusText.text = "生成失败"
-                        itemThumbnail.visibility = View.GONE
-                        actionButtons.visibility = View.GONE
+                        thumb.visibility = View.GONE
+                        actions.visibility = View.GONE
                     }
                     TaskStatus.PENDING -> {
-                        itemProgressBar.visibility = View.VISIBLE
-                        itemProgressBar.isIndeterminate = true
+                        prog.visibility = View.VISIBLE
+                        prog.isIndeterminate = true
                         statusText.visibility = View.VISIBLE
                         statusText.text = "等待中..."
-                        itemThumbnail.visibility = View.GONE
-                        actionButtons.visibility = View.GONE
+                        thumb.visibility = View.GONE
+                        actions.visibility = View.GONE
                     }
                 }
             }

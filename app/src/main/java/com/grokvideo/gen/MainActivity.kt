@@ -8,27 +8,25 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
-import com.google.android.material.textfield.TextInputEditText
+import androidx.appcompat.widget.Toolbar
+import androidx.cardview.widget.CardView
 import com.grokvideo.gen.data.*
 import kotlinx.coroutines.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
     
-    private lateinit var promptInput: TextInputEditText
-    private lateinit var generateButton: MaterialButton
+    private lateinit var promptInput: EditText
+    private lateinit var generateButton: Button
     private lateinit var progressLayout: LinearLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
-    private lateinit var errorCard: MaterialCardView
+    private lateinit var errorCard: CardView
     private lateinit var errorText: TextView
-    private lateinit var resultCard: MaterialCardView
+    private lateinit var resultCard: CardView
     private lateinit var videoThumbnail: ImageView
-    private lateinit var playButton: MaterialButton
-    private lateinit var downloadButton: MaterialButton
+    private lateinit var playButton: Button
+    private lateinit var downloadButton: Button
     
     private lateinit var apiService: ApiService
     private lateinit var prefsManager: PreferencesManager
@@ -41,7 +39,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        setSupportActionBar(findViewById(R.id.toolbar))
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
         
         apiService = ApiService()
         prefsManager = PreferencesManager(this)
@@ -239,13 +238,8 @@ class MainActivity : AppCompatActivity() {
     
     private fun showResult(videoUrl: String?) {
         if (videoUrl == null) return
-        
         currentVideoUrl = videoUrl
         resultCard.visibility = View.VISIBLE
-        
-        Glide.with(this)
-            .load(videoUrl)
-            .into(videoThumbnail)
     }
     
     private fun hideResult() {
