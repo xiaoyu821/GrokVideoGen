@@ -1,8 +1,11 @@
 package com.grokvideo.gen
 
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -86,9 +89,19 @@ class MainActivity : AppCompatActivity() {
         
         downloadButton.setOnClickListener {
             currentVideoUrl?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                intent.setDataAndType(Uri.parse(url), "video/mp4")
-                startActivity(Intent.createChooser(intent, "下载视频"))
+                try {
+                    val request = DownloadManager.Request(Uri.parse(url))
+                    request.setTitle("Grok 视频")
+                    request.setDescription("正在下载视频...")
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "GrokVideo_${System.currentTimeMillis()}.mp4")
+                    request.setMimeType("video/mp4")
+                    val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    dm.enqueue(request)
+                    Toast.makeText(this, "⬇️ 开始下载到 Download 文件夹", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
